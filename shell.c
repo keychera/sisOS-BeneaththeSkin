@@ -17,6 +17,7 @@ int div(int a, int b);
 void printChar(char ch);
 void clear(char*,int);
 
+char parent[7];
 char dir[7];
 
 main(){
@@ -29,6 +30,16 @@ main(){
   dir[5] = 0x00;
   dir[6] = 0x00;
   dir[7] = 0x00;
+  
+  parent[0] = 0x00;
+  parent[1] = 0x00;
+  parent[2] = 0x00;
+  parent[3] = 0x00;
+  parent[4] = 0x00;
+  parent[5] = 0x00;
+  parent[6] = 0x00;
+  parent[7] = 0x00;
+  
 	prnt("Hello, Modified Shell is Running!");
 	prnt("\r\n");
 	prnt("shell> ");
@@ -48,13 +59,13 @@ void parseInput(char* buff){
 	char grabBuff[180];
 	char createBuff[512];
 	int createIndex = 0;
-	char fileName[7];
+	char fileName[13];
 	char type[4];
 	char run[3];
 	char dirBuff[512];
 	char fileBuff[13312];
-	char fileName1[7];
-	char fileName2[7];
+	char fileName1[13];
+	char fileName2[13];
 	int bools = 1;
 	int bufferCt = 0;
 	int indexIn, index;
@@ -167,7 +178,7 @@ void parseInput(char* buff){
 		prnt("shell> ");
 
 	}
-	else if (buff[indexIn]=='c' && buff[indexIn+1]=='r' && buff[indexIn+2]=='e' && buff[indexIn+3]=='a'&& buff[indexIn+4]=='t' && buff[indexIn+5]=='e'){
+	else if (buff[indexIn]=='c' && buff[indexIn+1]=='r' && buff[indexIn+2]=='e' && buff[indexIn+3]=='a'&& buff[indexIn+4]=='t' && buff[indexIn+5]=='e' && buff[indexIn+6]!='d'){
 		indexIn = indexIn + 7;
 		prnt("START FILE HERE: \r\n");
 		prnt("\t-:");
@@ -212,7 +223,7 @@ void parseInput(char* buff){
 		
 		indexIn = indexIn + 4;
 
-		for(i=0;i<5;i++){
+		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
 		}
 		fileName[6] = "\0";
@@ -228,7 +239,46 @@ void parseInput(char* buff){
    
 		
 	}
-	else{
+  else if (buff[indexIn]=='c' && buff[indexIn+1]=='r' && buff[indexIn+2]=='e' && buff[indexIn+3]=='a'&& buff[indexIn+4]=='t' && buff[indexIn+5]=='e' && buff[indexIn+6]=='d'&& buff[indexIn+7]=='i' && buff[indexIn+8]=='r'){
+    
+    indexIn = indexIn + 10;
+
+		for(i=0;i<6;i++){
+			fileName[i] = buff[indexIn+i];
+		}
+    for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
+    
+    interrupt(0x21,8,fileName,0,0);
+    
+	} 
+  else if (buff[indexIn]=='c' && buff[indexIn+1]=='d'){
+    /*can go to any directory, not only the one in the current directries*/
+    /* assuming that directory names ( and also filenames) are all unique*/
+    /*NOT FINISHED*/
+    indexIn = indexIn + 3;
+
+    if (buff[indexIn] != .) {
+      for(i=0;i<6;i++){
+        fileName[i] = buff[indexIn+i];
+      }
+      for(i=6;i<12;i++){
+        fileName[i] = dir[i-6];
+      }
+      
+      
+      
+      for(i=0;i<6;i++){
+        parent[i] = dir[i];
+        dir[i] = 0x00;
+      }
+    } else {
+        
+    }
+  }
+  else{
 		prnt("Command not found!");
 		prnt("\r\n");
 		prnt("shell> ");

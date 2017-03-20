@@ -31,6 +31,8 @@ void writeFile(int* name, int* buffer, int numberOfSectors);
 void getDirectory();
 void clear(char*,int);
 
+void searchDir(char* dirname,int* exist,char* parentname);
+
 main(){
   
 	int i;
@@ -102,6 +104,10 @@ void handleInterrupt21 (int AX, int BX, int CX, int DX){
 		}
 		else if (AX == 9){
 			getDirectory();
+		}
+    else if (AX == 0xA){
+      /* BX = dir name, CX = (int at bool)does it exist or not, DX = parent name*/
+			searchDir(BX,CX,DX);
 		}
 		else {
             printString("Invalid interrupt!\0");
@@ -218,7 +224,7 @@ void writeFile(char* name,char* buffer, int numberOfSectors) {
       directory[32*directoryLine+index] = 0x0;
     }
   }
-  if (buffer[0] != 0x0) {
+  if (numberOfSectors != 0) {
     /*4.For each sector making up the file:*/
     for (k = 0; k < numberOfSectors; k++){
 
