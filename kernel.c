@@ -31,7 +31,9 @@ void writeFile(int* name, int* buffer, int numberOfSectors);
 void getDirectory();
 void clear(char*,int);
 
-void searchDir(char* dirname,int* exist,char* parentname);
+void searchParent(char* fileName,int* exist,char* parentname);
+int strComp6(int* buffer, char* fileName);
+void getChild(char* parentName);
 
 main(){
   
@@ -105,9 +107,13 @@ void handleInterrupt21 (int AX, int BX, int CX, int DX){
 		else if (AX == 9){
 			getDirectory();
 		}
-    else if (AX == 0xA){
+    else if (AX == 10){
       /* BX = dir name, CX = (int at bool)does it exist or not, DX = parent name*/
-			searchDir(BX,CX,DX);
+			searchParent(BX,CX,DX);
+		}
+    else if (AX == 11){
+      /* BX = parentName */
+			getChild(BX);
 		}
 		else {
             printString("Invalid interrupt!\0");
@@ -185,7 +191,7 @@ void writeFile(char* name,char* buffer, int numberOfSectors) {
 	char subBuff[512];
 	int iterator = 0;
 	int foundFree = 0;
-	int nameInts[7];
+	int nameInts[13];
 	int i,h;
 	int kVal;
 
@@ -321,8 +327,8 @@ void deleteFile(char* name){
 }
 
 void readFile(char* fileName,char* buffer){ 
-    int fileFound;
-    int nameCt = 0;
+  int fileFound;
+  int nameCt = 0;
 	int index, k,h;
 	int sectors[27];
 	int j = 0;
@@ -393,16 +399,14 @@ void readSector(char* buffer, int sector){
 
 int strComp(char* buffer, char* fileName){ 
 	int i, j;
-
 	int checkFound = 0;
-     for (i = 0; i < 16; i++)
- 		{
-		 /* If there is a file at the location */
-		if (buffer[32*i] != 0x0){
-			/* Check the first characters */
-			for (j=0; j < 12; j++){
-				/* This is a match */
-				if (buffer[j+32*1] == 0x0 || buffer[j+32*1] == '\r' || buffer[j+32*1] == '\n' || fileName[j] == 0x0 || fileName[j] == '\r' || fileName[j] == '\n'){
+  for (i = 0; i < 16; i++){
+    /* If there is a file at the location */
+    if (buffer[32*i] != 0x0){
+			/* Check the first 12 characters */
+      for (j=0; j < 12; j++){
+        /* This is a match */
+        if ((j>=6)&&(buffer[j+32*i] == 0x0 || buffer[j+32*i] == '\r' || buffer[j+32*i] == '\n' || fileName[j] == 0x0 || fileName[j] == '\r' || fileName[j] == '\n')){
 					break;
 				}
 				else if (buffer[j+32*i] == fileName[j]){
@@ -412,30 +416,141 @@ int strComp(char* buffer, char* fileName){
 					checkFound = 0;
 					break;
 				}
-				
 			}
-		 	
 			if (checkFound == 1){
-
-				 return i;
-			}
-			else{
-				/*printString("Next check");*/
-			
-			}
+        return i;
+      }
 		}
+  }
+  if (checkFound == 0){
+    for (i=0;i<13312;i++){
+      buffer[i] = 0x0;
+    }
+    return 0;
+  }
+}
+
+void searchParent(char* fileName, int* exist, char* parentName){
+	int index, k,h;
+	int j = 0;
+	int i;
+	int buffAddress = 0;
+  /*fileName is the first 6 byte of entry*/
+  char buffer[513];
+  
+    /* Read in the directory sector */
+  readSector(buffer, 2); 
+
+    /* Try to find the file name */
+	*exist = strComp6(buffer,fileName);
+  if (*exist != 0) {
+		index = (*exist)*32+6;
+		for (j=0;j<6;j++){
+			parentName[j] = buffer[index+j];
 		}
-			 if (checkFound == 0){
-				 for (i=0;i<13312;i++){
-					buffer[i] = 0x0;
-				 }
-				
-				 
-				return 0;
-			 }
+  }
+}
 
-	 
 
+int strComp6(char* buffer, char* fileName){ 
+  int i, j;
+	int checkFound = 0;
+  for (i = 0; i < 16; i++){
+    /* If there is a file at the location */
+    if (buffer[32*i] != 0x0){
+			/* Check the first 6 characters */
+      for (j=0; j < 6; j++){
+        /* This is a match */
+        if (buffer[j+32*i] == 0x0 || buffer[j+32*i] == '\r' || buffer[j+32*i] == '\n' || fileName[j] == 0x0 || fileName[j] == '\r' || fileName[j] == '\n'){
+					break;
+				}
+				else if (buffer[j+32*i] == fileName[j]){
+					checkFound = 1;	
+				}
+				else {
+					checkFound = 0;
+					break;
+				}
+			}
+			if (checkFound == 1){
+        return i;
+      }
+		}
+  }
+  if (checkFound == 0){
+    for (i=0;i<13312;i++){
+      buffer[i] = 0x0;
+    }
+    return 0;
+  }
+}
+
+void getChild(char* parentName){
+  char buff[512];
+	char dirBuff[512];
+  
+  int fileEntry;
+  
+ 
+  int yes;
+	int i,j;
+	int index = 0;
+  int factor = 0;
+  
+  char d[7];
+  d[0] = 'h';
+  d[1] = 'e';
+  d[2] = 'h';
+  d[3] = 'e';
+  d[4] = '\r';
+  d[5] = '\n';
+  d[6] = '\0';
+  
+  for(i=0;i<512;i++){
+		buff[i] = 0x0;
+		dirBuff[i]=0x0;
+	}
+  /* Read in the directory sector */
+  readSector(dirBuff, 2); 
+  /*search all child and save it to buffer*/
+  for(i=0;i<16;i++){
+    j = 0;
+    while (j < 6){
+        if (dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n' || parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n'){
+          if ((dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n') && (parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n')){
+            yes = 1;
+          } else {
+            yes = 0;
+          }
+					break;
+				}
+				else if (dirBuff[6+j+32*i] == parentName[j]){
+					yes = 1;	
+				}
+				else {
+          printString(d);
+					yes = 0;
+					break;
+				}
+      j++;
+    }
+		if (yes == 1){
+			/* Check the first characters */
+			for (j=0; j < 12; j++){
+				buff[index] = dirBuff[j+32*i];
+				index++;
+			}
+			/* Add some formatting */
+			buff[index] = '\r';
+			index++;
+			buff[index] = '\n';
+			index++;
+		}
+	}
+	for(i=0;i<512;i++){
+    if (buff[i] != 0x0)
+      printChar(buff[i]);
+	}
 }
 
 int mod(int a, int b){
