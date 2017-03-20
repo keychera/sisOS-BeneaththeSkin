@@ -187,65 +187,71 @@ void writeFile(char* name,char* buffer, int numberOfSectors) {
 	readSector(map,1);
 	readSector(directory,2);
 	
-	/*2.Find a free directory entry (one that begins with 0x00)*/
-     	for (directoryLine = 0; directoryLine < 16; directoryLine++){
-		 /* If there isnt a file at the location */
-		if (directory[32*directoryLine] == 0x00){
-			foundFree = 1;
-			break;
-		}
-	}
-	if (foundFree == 0){
-		printString("Didn't find empty location for file.");
-		return;
-	}
+  /*2.Find a free directory entry (one that begins with 0x00)*/
+      for (directoryLine = 0; directoryLine < 16; directoryLine++){
+     /* If there isnt a file at the location */
+    if (directory[32*directoryLine] == 0x00){
+      foundFree = 1;
+      break;
+    }
+  }
+  if (foundFree == 0){
+    printString("Didn't find empty location for file.");
+    return;
+  }
 
-	/*3.Copy the name to that directory entry.  If the name is less than 6 bytes, fill in the remaining bytes with 0x00*/
-	/* Get the name length */	
-	while(name[nameLen] != '\0' && name[nameLen] != 0x0){
-		nameLen++;
-	}
-	/* Write in the name*/
-	for (j=0;j<nameLen;j++){
-		directory[32*directoryLine+j] = name[j];
-	}
-	/* Check if the file name is less than 6 chars. If so, fill the remainder with 0x0s */
-	if (nameLen < 6){
-		diff = 6-nameLen;
-		for(j=0;j<diff;j++){
-			index = j+nameLen;
-			directory[32*directoryLine+index] = 0x0;
-		}
-	}
+  /*3.Copy the name to that directory entry.  If the name is less than 12 bytes, fill in the remaining bytes with 0x00*/
+  /* MODIFIED the name should consist of 6 byte of filename and 6 bytes of parent directories*/
+  /* Get the name length */	
+  while(name[nameLen] != '\0' && name[nameLen] != 0x0){
+    nameLen++;
+  }
+  /* Write in the name*/
+  for (j=0;j<nameLen;j++){
+    directory[32*directoryLine+j] = name[j];
+  }
+  /* Check if the file name is less than 12 chars. If so, fill the remainder with 0x0s */
+  if (nameLen < 12){
+    diff = 12-nameLen;
+    for(j=0;j<diff;j++){
+      index = j+nameLen;
+      directory[32*directoryLine+index] = 0x0;
+    }
+  }
+  if (buffer[0] != 0x0) {
+    /*4.For each sector making up the file:*/
+    for (k = 0; k < numberOfSectors; k++){
 
-	/*4.For each sector making up the file:*/
-	for (k = 0; k < numberOfSectors; k++){
-
-		/*5.Find a free sector by searching through the Map for a 0x00*/
-		sectorNum = 0;
-		while(map[sectorNum] != 0x0){
-			sectorNum++;
-		}
-		if (sectorNum==26)
-		{
-			printString("Not enough space in directory entry for file\n");
-			return;
-		}
-		/*6.Set that sector to 0xFF in the Map*/
-		map[sectorNum] = 0xFF;
-		/*7.Add that sector number to the file's directory entry*/
-		directory[32*directoryLine+6+k] = sectorNum;
-		/*8.Write 512 bytes from the buffer holding the file to that sector*/
-		for(j=0;j<512;j++){
-			kVal = k+1;
-			subBuff[j] = buffer[j*kVal];
-		}
-		writeSector(subBuff,sectorNum);
-	}
-	/*9.Fill in the remaining bytes in the directory entry to 0x00*/
-	/*for(j=0;j<32-numberOfSectors;j++){*/
-	
-	/*10.Write the Map and Directory sectors back to the disk*/
+      /*5.Find a free sector by searching through the Map for a 0x00*/
+      sectorNum = 0;
+      while(map[sectorNum] != 0x0){
+        sectorNum++;
+      }
+      if (sectorNum==20)
+      {
+        printString("Not enough space in directory entry for file\n");
+        return;
+      }
+      /*6.Set that sector to 0xFF in the Map*/
+      map[sectorNum] = 0xFF;
+      /*7.Add that sector number to the file's directory entry*/
+      directory[32*directoryLine+12+k] = sectorNum;
+      /*8.Write 512 bytes from the buffer holding the file to that sector*/
+      for(j=0;j<512;j++){
+        kVal = k+1;
+        subBuff[j] = buffer[j*kVal];
+      }
+      writeSector(subBuff,sectorNum);
+    }
+    /*9.Fill in the remaining bytes in the directory entry to 0x00*/
+    /*for(j=0;j<32-numberOfSectors;j++){*/
+  } else {
+    /*creating directories*/
+    for(k = 0;k < 20;k++)
+      directory[32*directoryLine+12+k] = 0x00;
+  }
+  
+  /*10.Write the Map and Directory sectors back to the disk*/
 	writeSector(map,1);
 	writeSector(directory,2);
 }
@@ -271,11 +277,11 @@ void deleteFile(char* name){
 
 		/*3. Clear the directory. Set the first byte of the file name to 0x00.*/
 		
-		for(i=0;i<6;i++){
+		for(i=0;i<12;i++){
 			directory[fileFound*32+i] = 0x00;
 		}
-		index = fileFound*32+6;
-		for (j=0;j<26;j++){
+		index = fileFound*32+12;
+		for (j=0;j<20;j++){
 		/*while(directory[index]!=0x0){*/
 			sectors[j] = directory[index+j];
 			directory[index+j] = 0x00;
@@ -283,7 +289,7 @@ void deleteFile(char* name){
 			/*index++;*/
 		
 		}
-		sectors[26] = 0x0;
+		sectors[20] = 0x0;
 
 		/*4.Step through the sectors numbers listed as belonging to the file.  For each sector, set the corresponding Map byte to 0x00.  For example, 
 		 if sector 7 belongs to the file, set the 7th Map byte to 0x00 (actually you should set the 8th, since the Map starts at sector 0).*/
@@ -329,13 +335,13 @@ void readFile(char* fileName,char* buffer){
 		/* 1.Using the sector numbers in the directory, load the file, sector by sector, into the buffer array.
 			You should add 512 to the buffer address every time you call readSector*/
 		/* Get the line that the file info is on from the buffer */
-		index = fileFound*32+6;
-		for (j=0;j<26;j++){
+		index = fileFound*32+12;
+		for (j=0;j<20;j++){
 			sectors[j] = buffer[index+j];
 			
 		}
 
-		sectors[26] = 0;
+		sectors[20] = 0;
 		k = 0;
 		while(sectors[k]!=0x0){
 			readSector(buffer+buffAddress,sectors[k]);
@@ -383,20 +389,13 @@ int strComp(char* buffer, char* fileName){
 	int i, j;
 
 	int checkFound = 0;
-
-
      for (i = 0; i < 16; i++)
  		{
 		 /* If there is a file at the location */
 		if (buffer[32*i] != 0x0){
 			/* Check the first characters */
-			for (j=0; j < 6; j++){
+			for (j=0; j < 12; j++){
 				/* This is a match */
-				/*printString("Checking: ");
-				printChar(buffer[j+32*i]);
-				printString(" with ");
-				printChar(fileName[j]);*/
-
 				if (buffer[j+32*1] == 0x0 || buffer[j+32*1] == '\r' || buffer[j+32*1] == '\n' || fileName[j] == 0x0 || fileName[j] == '\r' || fileName[j] == '\n'){
 					break;
 				}

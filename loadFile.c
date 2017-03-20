@@ -58,7 +58,7 @@ main(int argc, char* argv[])
 	int dirindex=i;
 
 	//fill the name field with 00s first
-	for (i=0; i<6; i++)
+	for (i=0; i<12; i++)
 		dir[dirindex+i]=0x00;
 	//copy the name over
 	for (i=0; i<6; i++)
@@ -68,13 +68,12 @@ main(int argc, char* argv[])
 		dir[dirindex+i]=argv[1][i];
 	}
 
-	dirindex=dirindex+6;
-
+	dirindex=dirindex+12;
 	//find free sectors and add them to the file
 	int sectcount=0;
 	while(!feof(loadFil))
-	{
-		if (sectcount==26)
+	{ 
+		if (sectcount==20)
 		{
 			printf("Not enough space in directory entry for file\n");
 			return;
@@ -97,7 +96,7 @@ main(int argc, char* argv[])
 		dir[dirindex]=i;
 		dirindex++;
 		sectcount++;
-
+    
 		//move to the sector and write to it
 		fseek(floppy,i*512,SEEK_SET);
 		for (i=0; i<512; i++)
