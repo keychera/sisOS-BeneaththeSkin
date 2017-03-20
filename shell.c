@@ -107,8 +107,14 @@ void parseInput(char* buff){
 
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-		fileName[6] = "\0";
+		for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
 		
 		interrupt(0x21, 3, fileName, fileBuff, 0);
 
@@ -124,9 +130,15 @@ void parseInput(char* buff){
 
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-		fileName[6] = "\0";
-
+		for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
+		
 		interrupt(0x21, 4, fileName, 0x2000, 0);
 		
 	}
@@ -135,9 +147,15 @@ void parseInput(char* buff){
 
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-		fileName[6] = "\0";
-
+		for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
+		
     interrupt(0x21,7,fileName,0,0);
 	}
 	else if (buff[indexIn]=='c' && buff[indexIn+1]=='o' && buff[indexIn+2]=='p' && buff[indexIn+3]=='y'){
@@ -147,19 +165,37 @@ void parseInput(char* buff){
 		i = 0;
 		while(buff[index] != 0x20 && buff[index] != 0x0){
 			fileName1[i] = buff[index];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 			index++;
 			i++;
 		}
-		fileName1[6] = '\0';
+
+		/*Masukin dir ke filename1*/
+		for (int j = i; j < 12; j++){
+			fileName1[j] = dir[j-i];
+		}
+		fileName1[12] = '\0';
 
 		i = 0;
 		index++;
 		while(buff[index] != 0x20 && buff[index] != 0x0){
 			fileName2[i] = buff[index];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 			index++;
 			i++;
 		}
-		fileName2[6] = '\0';
+
+		/*Masukin dir ke filename2*/
+		for (int j = i; j < 12; j++){
+			fileName2[j] = dir[j-i];
+		}
+		fileName2[12] = '\0';
+
+
 		/* Have the file names. Read in filename1 */
 		interrupt(0x21,3,fileName1,fileBuff,0);
     
@@ -184,8 +220,15 @@ void parseInput(char* buff){
 		prnt("\t-:");
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-		fileName[6] = "\0";
+		for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
+		
 
 		while(input){
 			/* Get user input */
@@ -225,8 +268,15 @@ void parseInput(char* buff){
 
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-		fileName[6] = "\0";
+		for(i=6;i<12;i++){
+			fileName[i] = dir[i-6];
+		}
+		fileName[12] = "\0";
+		
 
 		interrupt(0x21, 10, fileName, 0x4000, 0);
 		
@@ -245,8 +295,11 @@ void parseInput(char* buff){
 
 		for(i=0;i<6;i++){
 			fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
 		}
-    for(i=6;i<12;i++){
+ 	   	for(i=6;i<12;i++){
 			fileName[i] = dir[i-6];
 		}
 		fileName[12] = "\0";
@@ -263,6 +316,9 @@ void parseInput(char* buff){
     if (buff[indexIn] != .) {
       for(i=0;i<6;i++){
         fileName[i] = buff[indexIn+i];
+			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+				fileName[i] = 0x20;
+			}
       }
       for(i=6;i<12;i++){
         fileName[i] = dir[i-6];
