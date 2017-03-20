@@ -440,14 +440,20 @@ void searchParent(char* fileName, int* exist, char* parentName){
   
     /* Read in the directory sector */
   readSector(buffer, 2); 
-
-    /* Try to find the file name */
-	*exist = strComp6(buffer,fileName);
-  if (*exist != 0) {
-		index = (*exist)*32+6;
-		for (j=0;j<6;j++){
-			parentName[j] = buffer[index+j];
-		}
+  
+  if (fileName[0] != 0x0) {
+      /* Try to find the file name */
+    *exist = strComp6(buffer,fileName);
+    if (*exist != 0) {
+      index = (*exist)*32+6;
+      for (j=0;j<6;j++){
+        parentName[j] = buffer[index+j];
+      }
+    }
+  } else {
+    for (j=0;j<6;j++){
+        parentName[j] = 0x0;
+      }
   }
 }
 
@@ -512,6 +518,10 @@ void getChild(char* parentName){
 	}
   /* Read in the directory sector */
   readSector(dirBuff, 2); 
+  buff[index] = '\r';
+  index++;
+  buff[index] = '\n';
+  index++;
   /*search all child and save it to buffer*/
   for(i=0;i<16;i++){
     j = 0;
@@ -528,7 +538,6 @@ void getChild(char* parentName){
 					yes = 1;	
 				}
 				else {
-          printString(d);
 					yes = 0;
 					break;
 				}

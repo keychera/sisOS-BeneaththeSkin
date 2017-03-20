@@ -74,6 +74,7 @@ void parseInput(char* buff){
 	int indexIn, index;
 	int end;
 	int i = 0;
+  int j;
 	int lock = 0;
 	int fileLen = 0;
 	int sectors;
@@ -177,7 +178,7 @@ void parseInput(char* buff){
 		}
 
 		/*Masukin dir ke filename1*/
-		for (int j = i; j < 12; j++){
+		for (j = i; j < 12; j++){
 			fileName1[j] = dir[j-i];
 		}
 		fileName1[12] = '\0';
@@ -194,7 +195,7 @@ void parseInput(char* buff){
 		}
 
 		/*Masukin dir ke filename2*/
-		for (int j = i; j < 12; j++){
+		for (j = i; j < 12; j++){
 			fileName2[j] = dir[j-i];
 		}
 		fileName2[12] = '\0';
@@ -215,7 +216,6 @@ void parseInput(char* buff){
 	}
 	else if (buff[indexIn]=='d' && buff[indexIn+1]=='i' && buff[indexIn+2]=='r'){
 		interrupt(0x21,11,dir,0,0);
-		prnt("shell> ");
 
 	}
 	else if (buff[indexIn]=='c' && buff[indexIn+1]=='r' && buff[indexIn+2]=='e' && buff[indexIn+3]=='a'&& buff[indexIn+4]=='t' && buff[indexIn+5]=='e' && buff[indexIn+6]!='d'){
@@ -270,13 +270,13 @@ void parseInput(char* buff){
    
     prnt("cur dir : ");prnt(dir);
     prnt("\r\n");
-   prnt("parent of cur dir : ");prnt(parent);
+    prnt("parent of cur dir : ");prnt(parent);
     prnt("\r\n");
-  /*  prnt("testing searchParent : ");
-   interrupt(0x21,10,dir,&yes,parentName);
-   prnt(parentName);
-   prnt("\r\n");*/
-				prnt("shell> ");
+    prnt("testing searchParent : ");
+    interrupt(0x21,10,dir,&yes,parentName);
+    prnt(parentName);
+    prnt("\r\n");
+    prnt("shell> ");
    
 		
 	}
@@ -295,14 +295,8 @@ void parseInput(char* buff){
 		}
     
     
-		fileName[12] = "\0";
-    prnt("\r\n");
-    prnt("the name we got : ");prnt(fileName);
-    prnt("\r\n");
-    
+		fileName[12] = "\0";    
     interrupt(0x21,8,fileName,0,0);
-     prnt("\r\n");
-		prnt("shell> ");
     
 	} 
   else if (buff[indexIn]=='c' && buff[indexIn+1]=='d'){
@@ -312,7 +306,6 @@ void parseInput(char* buff){
     indexIn = indexIn + 3;
 
     if (buff[indexIn] != '.') {
-      prnt("this in\r\n");
       for(i=0;i<6;i++){
         fileName[i] = buff[indexIn+i];
 			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
@@ -320,36 +313,37 @@ void parseInput(char* buff){
 			}
       }
       interrupt(0x21,10,fileName,&yes,parentName);
-      prnt("the parent we got : ");prnt(parentName);
-      prnt("\r\n");
       if (yes > 0) {
-        /*check if it's on curent directory
+        /*check if it's on curent directory*/
         for(i = 0; i < 6; i++){
-          if (dir[j] == 0x0 || dir[j] == '\r' || dir[j] == '\n' && parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n') {
+          if ((dir[j] == 0x0 || dir[j] == '\r' || dir[j] == '\n') && (parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n')) {
             break;
           }
           yes &= (parentName[i] == dir[i]);
         }
-        if (yes > 0) {     */   
+        if (yes > 0) {       
           for(i=0;i<6;i++){
             parent[i] = dir[i];
             dir[i] = fileName[i];
           }
-          prnt("and we're in the dir : ");prnt(dir);
-          prnt("\r\n");
-        //}
+        }
       }
-    } else {
+    } 
+    else {
+      /*going back UP*/
+      for(i=0;i<7;i++){
+        dir[i] = 0x0;
+      }
       for(i=0;i<7;i++){
         dir[i] = parent[i];
       }
-      interrupt(0x21,10,parent,&yes,parentName);
-      for(i=0;i<7;i++){
-        parent[i] = parentName[i];
-      }
+      if (parent[i] != 0x0) {
+        interrupt(0x21,10,dir,&yes,parentName);
+        for(i=0;i<7;i++){
+          parent[i] = parentName[i];
+        }
+      } 
     }
-    prnt("\r\n");
-		prnt("shell> ");
   }
   else{
 		prnt("Command not found!");
