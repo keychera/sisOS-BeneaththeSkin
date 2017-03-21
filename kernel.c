@@ -524,43 +524,43 @@ void getChild(char* parentName){
   index++;
   /*search all child and save it to buffer*/
   for(i=0;i<16;i++){
-    j = 0;
-    while (j < 6){
-        if (dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n' || parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n'){
-          if ((dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n') && (parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n')){
-            yes = 1;
-          } else {
-            yes = 0;
+    if (dirBuff[32*i] != 0x0){
+      j = 0;
+      while (j < 6){
+          if (dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n' || parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n'){
+            if ((dirBuff[6+j+32*i] == 0x0 || dirBuff[6+j+32*i] == '\r' || dirBuff[6+j+32*i] == '\n') && (parentName[j] == 0x0 || parentName[j] == '\r' || parentName[j] == '\n')){
+              yes = 1;
+            } else {
+              yes = 0;
+            }
+            break;
           }
-					break;
-				}
-				else if (dirBuff[6+j+32*i] == parentName[j]){
-					yes = 1;	
-				}
-				else {
-					yes = 0;
-					break;
-				}
-      j++;
+          else if (dirBuff[6+j+32*i] == parentName[j]){
+            yes = 1;	
+          }
+          else {
+            yes = 0;
+            break;
+          }
+        j++;
+      }
+      if (yes == 1){
+        /* Check the first characters */
+        for (j=0; j < 6; j++){
+          buff[index] = dirBuff[j+32*i];
+          index++;
+        }
+        /* Add some formatting */
+        buff[index] = '\r';
+        index++;
+        buff[index] = '\n';
+        index++;
+      }
     }
-		if (yes == 1){
-			/* Check the first characters */
-			for (j=0; j < 12; j++){
-				buff[index] = dirBuff[j+32*i];
-				index++;
-			}
-			/* Add some formatting */
-			buff[index] = '\r';
-			index++;
-			buff[index] = '\n';
-			index++;
-		}
 	}
 	for(i=0;i<512;i++){
     if (buff[i] != 0x0)
       printChar(buff[i]);
-    else
-      printChar('x');
 	}
 }
 
