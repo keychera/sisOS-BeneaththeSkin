@@ -69,6 +69,7 @@ void parseInput(char* buff){
 	char fileName2[13];
   char parentName[13];
 	char parentName2[13];
+  char h;
 	int bools = 1;
 	int bufferCt = 0;
 	int indexIn, index;
@@ -269,15 +270,26 @@ void parseInput(char* buff){
 
 	}
   else if (buff[indexIn]=='t' && buff[indexIn+1]=='e' && buff[indexIn+2]=='s'){
+    
+    indexIn = indexIn + 4;
+    for(i=0;i<6;i++){
+      fileName[i] = buff[indexIn + i];
+      if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+        fileName[i] = 0x20;
+      }
+    }
+    
    
     prnt("cur dir : ");prnt(dir);
     prnt("\r\n");
     prnt("parent of cur dir : ");prnt(parent);
     prnt("\r\n");
-    prnt("testing searchParent : ");
-    interrupt(0x21,10,dir,&yes,parentName);
-    prnt(parentName);
-    prnt("\r\n");
+    if (fileName[0] != 0x20) {
+      prnt("testing searchParent : ");
+      interrupt(0x21,10,fileName,&yes,parentName);
+      prnt(parentName);
+      prnt("\r\n");
+    }
     prnt("shell> ");
    
 		
@@ -294,6 +306,11 @@ void parseInput(char* buff){
 		}
  	   	for(i=6;i<12;i++){
 			fileName[i] = dir[i-6];
+      if (fileName[6] != 0x0) {
+        if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+          fileName[i] = 0x20;
+        }
+      }
 		}
     
     
@@ -323,10 +340,17 @@ void parseInput(char* buff){
           }
           yes &= (parentName[i] == dir[i]);
         }
-        if (yes > 0) {       
+        if (yes > 0) {                 
           for(i=0;i<6;i++){
             parent[i] = dir[i];
+            
             dir[i] = fileName[i];
+            if (dir[0] != 0x0) {
+              if ((dir[i] == 0x0) || (dir[i] == '\r') || (dir[i] == '\n')){
+                dir[i] = 0x20;
+              }
+            }
+            
           }
         }
       }
@@ -338,10 +362,20 @@ void parseInput(char* buff){
       }
       for(i=0;i<7;i++){
         dir[i] = parent[i];
+        if (dir[0] != 0x0) {
+          if ((dir[i] == 0x0) || (dir[i] == '\r') || (dir[i] == '\n')){
+            dir[i] = 0x20;
+          }
+        }
       }
       interrupt(0x21,10,dir,&yes,parentName);
       for(i=0;i<7;i++){
         parent[i] = parentName[i];
+        if (parent[0] != 0x0) {
+          if ((parent[i] == 0x0) || (parent[i] == '\r') || (parent[i] == '\n')){
+            parent[i] = 0x20;
+          }
+        }
       }
     }
   }

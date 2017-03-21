@@ -545,7 +545,6 @@ void getChild(char* parentName){
         j++;
       }
       if (yes == 1){
-        /* Check the first characters */
         for (j=0; j < 6; j++){
           buff[index] = dirBuff[j+32*i];
           index++;
