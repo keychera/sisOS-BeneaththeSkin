@@ -559,6 +559,8 @@ void getChild(char* parentName){
 	for(i=0;i<512;i++){
     if (buff[i] != 0x0)
       printChar(buff[i]);
+    else
+      printChar('x');
 	}
 }
 

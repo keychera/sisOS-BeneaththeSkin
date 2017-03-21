@@ -216,6 +216,8 @@ void parseInput(char* buff){
 	}
 	else if (buff[indexIn]=='d' && buff[indexIn+1]=='i' && buff[indexIn+2]=='r'){
 		interrupt(0x21,11,dir,0,0);
+    prnt("\r\n");
+		prnt("shell> ");
 
 	}
 	else if (buff[indexIn]=='c' && buff[indexIn+1]=='r' && buff[indexIn+2]=='e' && buff[indexIn+3]=='a'&& buff[indexIn+4]=='t' && buff[indexIn+5]=='e' && buff[indexIn+6]!='d'){
@@ -308,9 +310,9 @@ void parseInput(char* buff){
     if (buff[indexIn] != '.') {
       for(i=0;i<6;i++){
         fileName[i] = buff[indexIn+i];
-			if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
-				fileName[i] = 0x20;
-			}
+        if ((fileName[i] == 0x0) || (fileName[i] == '\r') || (fileName[i] == '\n')){
+          fileName[i] = 0x20;
+        }
       }
       interrupt(0x21,10,fileName,&yes,parentName);
       if (yes > 0) {
@@ -337,12 +339,10 @@ void parseInput(char* buff){
       for(i=0;i<7;i++){
         dir[i] = parent[i];
       }
-      if (parent[i] != 0x0) {
-        interrupt(0x21,10,dir,&yes,parentName);
-        for(i=0;i<7;i++){
-          parent[i] = parentName[i];
-        }
-      } 
+      interrupt(0x21,10,dir,&yes,parentName);
+      for(i=0;i<7;i++){
+        parent[i] = parentName[i];
+      }
     }
   }
   else{
